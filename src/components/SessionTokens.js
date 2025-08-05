@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaKey, FaCopy, FaInfoCircle, FaCheck, FaArrowLeft } from 'react-icons/fa';
+import { FaKey, FaCopy, FaInfoCircle, FaCheck, FaArrowLeft, FaSync } from 'react-icons/fa';
+import Swal from 'sweetalert2';
 import '../styles/SessionTokens.css';
+import { refreshToken } from '../api/authApi';
 
 const SessionTokens = () => {
-  const token = localStorage.getItem('token');
-  const refreshToken = localStorage.getItem('refreshToken');
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [storedRefreshToken, setStoredRefreshToken] = useState(localStorage.getItem('refreshToken'));
   const [copiedToken, setCopiedToken] = useState(false);
   const [copiedRefreshToken, setCopiedRefreshToken] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const navigate = useNavigate();
 
-  // Solución 1: Forzar actualización de la ruta al cargar el componente
   useEffect(() => {
     window.history.replaceState(null, '', '/menu/tokens');
   }, []);
@@ -29,10 +31,56 @@ const SessionTokens = () => {
     });
   };
 
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const { token: newToken, refreshToken: newRefreshToken } = await refreshToken();
+      
+      // Actualizar tokens en localStorage y estado
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('refreshToken', newRefreshToken);
+      setToken(newToken);
+      setStoredRefreshToken(newRefreshToken);
+      setCopiedToken(false);
+      setCopiedRefreshToken(false);
+      
+      await Swal.fire({
+        title: '¡Éxito!',
+        text: 'Tokens actualizados correctamente',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('Error al refrescar tokens:', error);
+      
+      let errorMessage = 'No se pudo refrescar la sesión. ';
+      if (error.response?.status === 400) {
+        errorMessage += 'El refresh token es inválido o ha expirado.';
+      } else {
+        errorMessage += 'Error del servidor.';
+      }
+
+      await Swal.fire({
+        title: 'Error',
+        text: errorMessage,
+        icon: 'error',
+        confirmButtonText: 'Entendido'
+      }).then(() => {
+        // Limpiar y redirigir solo si el error es de autenticación
+        if (error.response?.status === 400 || error.response?.status === 401) {
+          localStorage.clear();
+          navigate('/login', { replace: true });
+        }
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   return (
     <div className="tokens-container">
       <div className="tokens-header">
-        {/* Solución 2: Botón de retroceso para navegación */}
         <button 
           onClick={() => navigate(-1)}
           className="back-button"
@@ -78,16 +126,16 @@ const SessionTokens = () => {
           <div className="token-content">
             <textarea 
               readOnly 
-              value={refreshToken || 'No hay refresh token disponible'} 
-              className={!refreshToken ? 'empty-token' : ''}
+              value={storedRefreshToken || 'No hay refresh token disponible'} 
+              className={!storedRefreshToken ? 'empty-token' : ''}
               aria-label="Refresh token"
             />
           </div>
           <div className="token-actions">
             <button 
               className="copy-btn" 
-              onClick={() => copyToClipboard(refreshToken, 'refreshToken')}
-              disabled={!refreshToken}
+              onClick={() => copyToClipboard(storedRefreshToken, 'refreshToken')}
+              disabled={!storedRefreshToken}
               aria-label={copiedRefreshToken ? 'Refresh token copiado' : 'Copiar refresh token'}
             >
               {copiedRefreshToken ? <FaCheck /> : <FaCopy />}
@@ -99,6 +147,24 @@ const SessionTokens = () => {
             <span>Usa este token para obtener un nuevo token de acceso cuando expire</span>
           </div>
         </div>
+
+        <button 
+          className="refresh-btn" 
+          onClick={handleRefresh}
+          disabled={!storedRefreshToken || isRefreshing}
+        >
+          {isRefreshing ? (
+            <>
+              <FaSync className="fa-spin" />
+              Refrescando...
+            </>
+          ) : (
+            <>
+              <FaSync />
+              Refrescar Tokens
+            </>
+          )}
+        </button>
       </div>
     </div>
   );

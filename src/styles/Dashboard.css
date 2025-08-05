@@ -1,0 +1,32 @@
+.dashboard-container {
+  font-family: Arial, sans-serif;
+}
+
+.dashboard-nav {
+  background: #222;
+  color: #fff;
+  padding: 1rem;
+}
+
+.dashboard-nav ul {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  padding: 0;
+}
+
+.dashboard-nav li {
+  display: inline;
+}
+
+.dashboard-nav a, .dashboard-nav button {
+  color: white;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dashboard-content {
+  padding: 2rem;
+}

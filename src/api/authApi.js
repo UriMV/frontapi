@@ -4,7 +4,7 @@ import axios from 'axios';
 const API_URL = 'https://authapi.somee.com/api/Auth';
 
 export const loginUser = async (credentials) => {
-  const response = await axios.post(`${API_URL}/`, credentials);
+  const response = await axios.post(`${API_URL}/login`, credentials);
   // Guardar tokens en localStorage
   localStorage.setItem('token', response.data.token);
   localStorage.setItem('refreshToken', response.data.refreshToken);

@@ -70,7 +70,7 @@ const SessionTokens = () => {
         // Limpiar y redirigir solo si el error es de autenticación
         if (error.response?.status === 400 || error.response?.status === 401) {
           localStorage.clear();
-          navigate('/login', { replace: true });
+          navigate('/', { replace: true });
         }
       });
     } finally {

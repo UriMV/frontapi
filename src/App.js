@@ -1,31 +1,41 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// App.js
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
 import Register from './components/Register';
 import Login from './components/Login';
 import ResetPassword from './components/ResetPassword';
-import Dashboard from './components/Dashboard'; // ✅ Importa Dashboard
-import Libros from './components/Libros';       // ✅ Componente para libros
-import Autores from './components/Autores'; 
+import Dashboard from './components/Dashboard';
+import Libros from './components/Libros';
+import Autores from './components/Autores';
 import SessionTokens from './components/SessionTokens';
+import { setNavigate } from './axiosConfig';
 
-function App() {
+function AppRoutes() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/reset" element={<ResetPassword />} />
-        
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/reset" element={<ResetPassword />} />
 
-        {/* ✅ RUTA PROTEGIDA DEL DASHBOARD */}
-        <Route path="/menu" element={<Dashboard />}>
-          <Route path="libros" element={<Libros />} />
-          <Route path="autores" element={<Autores />} />
-          <Route path="/menu/tokens" element={<SessionTokens />} />
-        </Route>
-      </Routes>
-    </Router>
+      <Route path="/menu" element={<Dashboard />}>
+        <Route path="libros" element={<Libros />} />
+        <Route path="autores" element={<Autores />} />
+        <Route path="tokens" element={<SessionTokens />} />
+      </Route>
+    </Routes>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Router>
+      <AppRoutes />
+    </Router>
+  );
+}
